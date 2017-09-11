@@ -11,12 +11,10 @@ The goals of this project are as follows:
 [//]: # (Image References)
 [image1]: ./examples/HOGdemo.PNG
 [image2]: ./examples/FalsePositives.PNG
-[image3]: ./examples/heat.PNG
-[image4]: ./examples/sliding_window.jpg
-[image5]: ./examples/bboxes_and_heat.png
-[image6]: ./examples/labels_map.png
-[image7]: ./examples/output_bboxes.png
-[video1]: ./project_video.mp4
+[image3]: ./examples/HeatSample.PNG
+[image4]: ./examples/heat.PNG
+[image5]: ./examples/HeatMapThreshold.PNG
+[video1]: ./FinalProjectVideoOutput.mp4
 
 **Description of files**
 
@@ -82,17 +80,17 @@ The linear SVM took 20.11 seconds to train. The overall accuracy of the SVM was 
 
 **Window Search**
 
-Now that the classifier has been trained to a good accuracy, the next step is to test it on sample images. A sliding window the size of the training image (64x64) is scanned across the test image with some degree of overlap. The classifier predicts if the window contains a car or not. A simple check that can be done is to limit the window search only across a region of the image where cars can realistically exist. 
+Now that the classifier has been trained to a good accuracy, the next step is to test it on sample images. A sliding window the size of the training image (64x64) is scanned across the test image with some degree of overlap. The classifier predicts if the window contains a car or not. A simple optimization was done to limit the window search across a region of the image where cars can realistically exist. 
 
 For example, the test image is of size 1240x720. The window search was restricted by imposing a Y-limit of 400 to 656. The output of the classifier applied on the images are shown below. 
 
 ![alt text][image2]
 
-As seen in the above image, the classifier does a nice job on predicting cars but there are also some false positives detected. In order to tackle these false positives, a couple of different strategies are used. The first and most important strategy is the concept of "adding heat" to a box.
+As seen in the above image, the classifier does a nice job on predicting cars but there are also some false positives detected. In order to tackle these false positives, a couple of different strategies were used. The first and most important strategy was the concept of "adding heat" to a box.
 
 **Heat - rejecting false positives**
 
-As seen in the image above, windows are drawn around region where the classifier predicts a car to be present. These are the "hot windows" within the image. The "heat" logic iterates through the different hot windows and adds a weighting factor to pixels that are located within the window. As seen above, there are multiple hot windows overlapping around the location of the car. The pixels that intersect between these hot windows automatically have their heat value increased compared to other locations in the image. It is unlikely that false positives have multiple windows overlapping. By setting a threshold value for the heat in a given window, false positives are greatly reduced. 
+As seen in the image above, windows are drawn around region where the classifier predicts a car to be present. These are the "hot windows" within the image. The "heat" logic iterates through the different hot windows and adds a weighting factor to pixels that are located within the window. As seen above, there are multiple hot windows overlapping around the location of the car in an image. The pixels that intersect between these hot windows automatically have their heat value increased compared to other locations in the image. It is unlikely that false positives have multiple windows overlapping. By setting a threshold value for the heat in a given window, false positives are greatly reduced. 
 
 ```sh
 def add_heat(heatmap, bbox_list):
@@ -105,9 +103,68 @@ def add_heat(heatmap, bbox_list):
     # Return updated heatmap
     return heatmap
 ```
-Image below demonstrates the effectiveness of the technique. As seen, all the false positives in the test images were eliminated. 
+Image below shows the heat map that was generated. As seen, the ones that are brighter tend to be around the location of the car 
 
 ![alt text][image3]
+
+Below is the test image with false positives eliminated via the heat map strategy. 
+
+![alt text][image4]
+
+While the sliding window search is effective, it is computationally very expensive. Another scheme was written to extract hog features only once and then can be sub-sampled to get all of its overlaying windows. Each window is defined by a scaling factor where a scale of 1 would result in a window that's 8 x 8 cells then the overlap of each window is in terms of the cell distance. This means that a cells_per_step = 2 would result in a search window overlap of 75%. 
+
+**Final Pipeline**
+
+While the heat method worked great on test images, false positives were still detected on the project video. Also, the box was very jittery around the car. Couple of strategies were used to improve noise rejection and stabilize the bounding box around the car.
+
+- An aspect ratio check was added to hot windows. If the detected window in an image is too small to realistically be a car, those windows were automatically eliminated. 
+- A running buffer of heat map was maintained for the 10 frames. The sum (or average) of this heatmap buffer was used for thresholding. This greatly helped to stabilize the bounding box around the car. 
+
+The final pipeline for the image processing is shown below:
+
+```sh
+def final_pipeline(image_jpg):
+    
+    global heatmaps
+    global heatmapsumlist
+
+    hotwindows=find_cars(image_jpg)
+    
+    heat = np.zeros_like(image_jpg[:,:,0]).astype(np.float)
+
+    # Add heat to each box in box list
+    heat = add_heat(heat,hotwindows) 
+    #print(np.max(heat))
+    heatmaps.append(heat)
+    #print(heatmaps)
+    heatmap_sum = sum(heatmaps)
+    heatmapsumlist.append(np.max(heatmap_sum))
+    #print(np.max(heatmap_sum))
+    #heatmaps_avg=get_avg_heatmaps(heatmaps,10)
+    #print(np.max(heatmaps_avg))
+
+    # Apply threshold to help remove false positives
+    heat = apply_threshold(heatmap_sum,30)
+
+    # Visualize the heatmap when displaying    
+    heatmap = np.clip(heat, 0, 255)
+
+    # Find final boxes from heatmap using label function
+    labels = label(heatmap)
+    draw_img = draw_labeled_bboxes(np.copy(image_jpg), labels)
+    
+    return draw_img
+```
+
+In order to get a reasonable estimate of the threshold, the heatmap sum was plotted for the region of the video that was challenging with shadows and detected more false positives. As seen in plot below, a threshold of 30 worked well across the whole video.  
+
+![alt text][image5]
+
+
+The pipeline was tested on the whole video. Here's a [link to the final video result](./FinalProjectVideoOutput.mp4)
+
+
+
 
 
 
