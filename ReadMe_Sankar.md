@@ -1,4 +1,4 @@
-##Vehicle Detection Project
+## Vehicle Detection Project
 ---
 
 The goals of this project are as follows:
@@ -11,7 +11,7 @@ The goals of this project are as follows:
 [//]: # (Image References)
 [image1]: ./examples/HOGdemo.PNG
 [image2]: ./examples/FalsePositives.PNG
-[image3]: ./examples/sliding_windows.jpg
+[image3]: ./examples/heat.PNG
 [image4]: ./examples/sliding_window.jpg
 [image5]: ./examples/bboxes_and_heat.png
 [image6]: ./examples/labels_map.png
@@ -82,9 +82,49 @@ The linear SVM took 20.11 seconds to train. The overall accuracy of the SVM was 
 
 **Window Search**
 
-Now that the classifier has been trained to a good accuracy, the next step is to test it on sample images. A sliding window the size of the training image (64x64) is scanned across the test image. The classifier predicts if the window contains a car or not. A simple check that can be done is to limit the window search only across a region of the image where cars can realistically exist. 
+Now that the classifier has been trained to a good accuracy, the next step is to test it on sample images. A sliding window the size of the training image (64x64) is scanned across the test image with some degree of overlap. The classifier predicts if the window contains a car or not. A simple check that can be done is to limit the window search only across a region of the image where cars can realistically exist. 
 
 For example, the test image is of size 1240x720. The window search was restricted by imposing a Y-limit of 400 to 656. The output of the classifier applied on the images are shown below. 
 
 ![alt text][image2]
+
+As seen in the above image, the classifier does a nice job on predicting cars but there are also some false positives detected. In order to tackle these false positives, a couple of different strategies are used. The first and most important strategy is the concept of "adding heat" to a box.
+
+**Heat - rejecting false positives**
+
+As seen in the image above, windows are drawn around region where the classifier predicts a car to be present. These are the "hot windows" within the image. The "heat" logic iterates through the different hot windows and adds a weighting factor to pixels that are located within the window. As seen above, there are multiple hot windows overlapping around the location of the car. The pixels that intersect between these hot windows automatically have their heat value increased compared to other locations in the image. It is unlikely that false positives have multiple windows overlapping. By setting a threshold value for the heat in a given window, false positives are greatly reduced. 
+
+```sh
+def add_heat(heatmap, bbox_list):
+    # Iterate through list of bboxes
+    for box in bbox_list:
+        # Add += 1 for all pixels inside each bbox
+        # Assuming each "box" takes the form ((x1, y1), (x2, y2))
+        heatmap[box[0][1]:box[1][1], box[0][0]:box[1][0]] += 1
+
+    # Return updated heatmap
+    return heatmap
+```
+Image below demonstrates the effectiveness of the technique. As seen, all the false positives in the test images were eliminated. 
+
+![alt text][image3]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
