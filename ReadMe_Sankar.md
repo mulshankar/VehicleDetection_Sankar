@@ -111,7 +111,7 @@ Below is the test image with false positives eliminated via the heat map strateg
 
 ![alt text][image4]
 
-While the sliding window search is effective, it is computationally very expensive. Another scheme was written to extract hog features only once and then can be sub-sampled to get all of its overlaying windows. Each window is defined by a scaling factor where a scale of 1 would result in a window that's 8 x 8 cells then the overlap of each window is in terms of the cell distance. This means that a cells_per_step = 2 would result in a search window overlap of 75%. 
+While the sliding window search is effective, it is computationally very expensive. Another scheme was written to extract hog features only once and then can be sub-sampled to get all of its overlaying windows. Each window is defined by a scaling factor where a scale of 1 would result in a window that's 8 x 8 cells then the overlap of each window is in terms of the cell distance. 
 
 **Final Pipeline**
 
@@ -161,10 +161,15 @@ In order to get a reasonable estimate of the threshold, the heatmap sum was plot
 ![alt text][image5]
 
 
-The pipeline was tested on the whole video. Here's a [link to the final video result](./FinalProjectVideoOutput.mp4)
+The pipeline was tested on the project video. A link to the video is below (youtube)
+
+[![Final Video](https://img.youtube.com/vi/sT67LHImpJM/0.jpg)](https://youtu.be/sT67LHImpJM)
 
 
+**Scope for Improvement**
 
+* Combination of color spaces might help in better noise rejection
+* A deep learning based approach might be interesting to benchmark in comparison
 
 
 
