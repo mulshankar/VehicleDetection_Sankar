@@ -28,11 +28,11 @@ The first step was to gather data for training a classifier that can detect cars
 
 The next step was to select features for the classification problem. The 3 key features that were used for the classification were:
 
-- Spatial domain
+- Spatial
 - Color transformation and
 - Histogram of Gradients (HOG)
 
-HOG features offer a clear distinction between cars and non-car images. HOG feature use edge detection and computes a histogram of gradients within a user-defined block. Image below shows a comparison of HOG feature on a car image vs non-car image. 
+HOG features offered a clear distinction between cars and non-car images. HOG feature uses edge detection and computes a histogram of gradients within a user-defined block. Image below shows a comparison of HOG feature on a car image vs non-car image. 
 
 ![alt text][image1]
 
@@ -111,14 +111,14 @@ Below is the test image with false positives eliminated via the heat map strateg
 
 ![alt text][image4]
 
-While the sliding window search is effective, it is computationally very expensive. Another scheme was written to extract hog features only once and then can be sub-sampled to get all of its overlaying windows. Each window is defined by a scaling factor where a scale of 1 would result in a window that's 8 x 8 cells then the overlap of each window is in terms of the cell distance. 
+While the sliding window search is effective, it is computationally very expensive. Another scheme was written to extract hog features only once and then sub-sampled to get all of its overlaying windows. Each window is defined by a scaling factor where a scale of 1 would result in a window that's 8 x 8 cells. 
 
 **Final Pipeline**
 
 While the heat method worked great on test images, false positives were still detected on the project video. Also, the box was very jittery around the car. Couple of strategies were used to improve noise rejection and stabilize the bounding box around the car.
 
 - An aspect ratio check was added to hot windows. If the detected window in an image is too small to realistically be a car, those windows were automatically eliminated. 
-- A running buffer of heat map was maintained for the 10 frames. The sum (or average) of this heatmap buffer was used for thresholding. This greatly helped to stabilize the bounding box around the car. 
+- A running buffer of heat map was maintained for the last 10 frames. The sum (or average) of this heatmap buffer was used for thresholding. This greatly helped to stabilize the bounding box around the car. 
 
 The final pipeline for the image processing is shown below:
 
@@ -156,7 +156,7 @@ def final_pipeline(image_jpg):
     return draw_img
 ```
 
-In order to get a reasonable estimate of the threshold, the heatmap sum was plotted for the region of the video that was challenging with shadows and detected more false positives. As seen in plot below, a threshold of 30 worked well across the whole video.  
+In order to get a reasonable estimate of the threshold, the heatmap sum was plotted for the region of the video that was challenging with shadows and detected more false positives. A sample plot of the heat sum is shown below. As seen, a threshold of 30 worked well across the whole video.  
 
 ![alt text][image5]
 
