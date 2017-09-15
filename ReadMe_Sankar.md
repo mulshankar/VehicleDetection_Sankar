@@ -57,6 +57,8 @@ The "cell_per_block" parameter did not seem to have a major effect on the final 
 
 ![alt text][image4]
 
+Eventually all these combinations were evaluated by calculating the accuracy of the SVM classifier using these features. Accuracy had to be >98% to control false positives on the image. 
+
 The final parameter set chosen for the linear SVM was:
 
 ```sh
@@ -128,10 +130,12 @@ While the sliding window search is effective, it is computationally very expensi
 
 **Final Pipeline**
 
-While the heat method worked great on test images, false positives were still detected on the project video. Also, the box was very jittery around the car. Couple of strategies were used to improve noise rejection and stabilize the bounding box around the car.
+While the heat method worked great on test images, false positives were still detected on the project video. Also, the box was very jittery around the car. Few additional strategies were used to improve noise rejection and stabilize the bounding box around the car.
 
 - An aspect ratio check was added to hot windows. If the detected window in an image is too small to realistically be a car, those windows were automatically eliminated. 
 - A running buffer of heat map was maintained for the last 10 frames. The sum (or average) of this heatmap buffer was used for thresholding. This greatly helped to stabilize the bounding box around the car. 
+- Multiple scales were used to parse the image for cars. For example, smaller scales were used for detection of cars that were farther in the image and larger scales for cars that are closer. 
+- Rather than using SVM classifier to output a 0 or 1 for car/non-car, the SVM decision function was used. The decision function produced the distance of the current "X - test feature" from the classifier boundary. In other words, it provided a confidence value of how sure the classifier is about the windows containing a car or not. A threshold was set for this boundary and proved extremely useful in reducing the false positives.
 
 The final pipeline for the image processing is shown below:
 
@@ -176,7 +180,7 @@ In order to get a reasonable estimate of the threshold, the heatmap sum was plot
 
 The pipeline was tested on the project video. A link to the video is below (youtube)
 
-[![Final Video](https://img.youtube.com/vi/sT67LHImpJM/0.jpg)](https://youtu.be/sT67LHImpJM)
+[![Final Video](https://img.youtube.com/vi/2g5UC7db_Eg/0.jpg)](https://youtu.be/2g5UC7db_Eg)
 
 
 **Scope for Improvement**
