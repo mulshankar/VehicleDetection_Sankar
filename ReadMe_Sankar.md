@@ -3,10 +3,10 @@
 
 The goals of this project are as follows:
 
-* Train a classifier to predict cars on road
+* Train a classifier to detect cars on road
 * Extract and evaluate classifier performance on features like Histogram of Gradients (HOG), color transformation and spatial binning
 * Create a pipeline to detect cars on test images
-* Test the pipeline on a video with boxes indicating location of real cars
+* Test the pipeline on a video drawing boxes indicating location of real cars
 
 [//]: # (Image References)
 [image2]: ./examples/OrientationDOE.png
@@ -17,12 +17,11 @@ The goals of this project are as follows:
 [image6]: ./examples/HeatSample.PNG
 [image7]: ./examples/heat.PNG
 [image8]: ./examples/HeatMapThreshold.PNG
-[video9]: ./FinalProjectVideoOutput.mp4
 
 **Description of files**
 
 * VehicleDetectionSankar.ipynb is the jupyter notebook that contains the overall code
-* FinalProjectVideoOutput.mp4 is the video output demonstrating the above pipeline
+* FinalVideo_Rev2.mp4 is the video output demonstrating the above pipeline
 
 **Algorithm**
 ---
@@ -135,6 +134,20 @@ While the heat method worked great on test images, false positives were still de
 - An aspect ratio check was added to hot windows. If the detected window in an image is too small to realistically be a car, those windows were automatically eliminated. 
 - A running buffer of heat map was maintained for the last 10 frames. The sum (or average) of this heatmap buffer was used for thresholding. This greatly helped to stabilize the bounding box around the car. 
 - Multiple scales were used to parse the image for cars. For example, smaller scales were used for detection of cars that were farther in the image and larger scales for cars that are closer. 
+
+```sh
+scales=[1.2,1.6,2.0,2.4,2.8,3.2]
+    
+for scale in scales:
+
+	if scale<2.0:
+		ystart=400
+		ystop=528
+	else:        
+		ystart=400 
+		ystop=656
+```
+
 - Rather than using SVM classifier to output a 0 or 1 for car/non-car, the SVM decision function was used. The decision function produced the distance of the current "X - test feature" from the classifier boundary. In other words, it provided a confidence value of how sure the classifier is about the windows containing a car or not. A threshold was set for this boundary and proved extremely useful in reducing the false positives.
 
 The final pipeline for the image processing is shown below:
