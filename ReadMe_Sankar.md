@@ -9,12 +9,15 @@ The goals of this project are as follows:
 * Test the pipeline on a video with boxes indicating location of real cars
 
 [//]: # (Image References)
+[image2]: ./examples/OrientationDOE.png
+[image3]: ./examples/PixPerCellDOE.png
+[image4]: ./examples/CellPerBlockDOE.png
 [image1]: ./examples/HOGdemo.PNG
-[image2]: ./examples/FalsePositives.PNG
-[image3]: ./examples/HeatSample.PNG
-[image4]: ./examples/heat.PNG
-[image5]: ./examples/HeatMapThreshold.PNG
-[video1]: ./FinalProjectVideoOutput.mp4
+[image5]: ./examples/FalsePositives.PNG
+[image6]: ./examples/HeatSample.PNG
+[image7]: ./examples/heat.PNG
+[image8]: ./examples/HeatMapThreshold.PNG
+[video9]: ./FinalProjectVideoOutput.mp4
 
 **Description of files**
 
@@ -32,7 +35,7 @@ The next step was to select features for the classification problem. The 3 key f
 - Color transformation and
 - Histogram of Gradients (HOG)
 
-HOG features offered a clear distinction between cars and non-car images. HOG feature uses edge detection and computes a histogram of gradients within a user-defined block. Image below shows a comparison of HOG feature on a car image vs non-car image. 
+HOG features are a real powerful tool for the classification problem and offered a clear distinction between cars and non-car images. HOG features use edge detection and computes a histogram of gradients within a user-defined block. Image below shows a comparison of HOG feature on a car image vs non-car image. 
 
 ![alt text][image1]
 
@@ -42,7 +45,17 @@ A simple linear Support Vector Machine (SVM) classifier was chosen for the detec
 
 - In terms of spatial feature, a 32x32 image was sufficient to capture the key features of a car
 - Various color spaces were explored that include HSV, HLS, LUV, YUV and YCrCb. In terms of classifier accuracy, HLS and YCrCb performed the best. It was interesting to note that LUV and YUV features caused some NaN values while extracting HOG features on some images. The final color space chosen for this project was YCrCb
-- HOG features were extracted from all 3 channels. It made the feature vector slightly longer but helped a lot in terms of classification accuracy. 
+- HOG features were extracted from all 3 channels. It made the feature vector slightly longer but helped a lot in terms of classification accuracy. A Design of Experiments (DOE) was performed on the HOG parameters. The first parameter that was studied was the HOG orientations. Image below shows the effect of number of orientations for a car image. As evident from the image below, increasing orientations beyond 9 did not add any value. When the number of orientations was set at 9, the a clear pattern was noticed for car image.  
+
+![alt text][image2]
+
+The next HOG parameter that was studied was the "pixel_per_cell". Image below shows the effect of this parameter on HOG features for car vs non-car images. At a value around 8, the hog image seemed to have a clear pattern surrounding the car. 
+
+![alt text][image3]
+
+The "cell_per_block" parameter did not seem to have a major effect on the final hog image. 
+
+![alt text][image4]
 
 The final parameter set chosen for the linear SVM was:
 
@@ -84,7 +97,7 @@ Now that the classifier has been trained to a good accuracy, the next step is to
 
 For example, the test image is of size 1240x720. The window search was restricted by imposing a Y-limit of 400 to 656. The output of the classifier applied on the images are shown below. 
 
-![alt text][image2]
+![alt text][image5]
 
 As seen in the above image, the classifier does a nice job on predicting cars but there are also some false positives detected. In order to tackle these false positives, a couple of different strategies were used. The first and most important strategy was the concept of "adding heat" to a box.
 
@@ -105,11 +118,11 @@ def add_heat(heatmap, bbox_list):
 ```
 Image below shows the heat map that was generated. As seen, the ones that are brighter tend to be around the location of the car 
 
-![alt text][image3]
+![alt text][image6]
 
 Below is the test image with false positives eliminated via the heat map strategy. 
 
-![alt text][image4]
+![alt text][image7]
 
 While the sliding window search is effective, it is computationally very expensive. Another scheme was written to extract hog features only once and then sub-sampled to get all of its overlaying windows. Each window is defined by a scaling factor where a scale of 1 would result in a window that's 8 x 8 cells. 
 
@@ -158,7 +171,7 @@ def final_pipeline(image_jpg):
 
 In order to get a reasonable estimate of the threshold, the heatmap sum was plotted for the region of the video that was challenging with shadows and detected more false positives. A sample plot of the heat sum is shown below. As seen, a threshold of 30 worked well across the whole video.  
 
-![alt text][image5]
+![alt text][image8]
 
 
 The pipeline was tested on the project video. A link to the video is below (youtube)
